@@ -30,6 +30,7 @@ class Database {
 	
 		$password = $data['admin_password']; 
 		$admin_email = $data['admin_email']; 
+		$mobile = $data['admin_mobile'];
 
 		$params = [
 			'cost' => 12
@@ -42,12 +43,23 @@ class Database {
 			$password = password_hash($password, PASSWORD_BCRYPT, $params);
         }
         
-        $set = " `password`='".$password."', `mobile`='".$data['admin_mobile']."' ";
-        if(isset($data['admin_email'])){
-            $set .= ", `email`='".$data['admin_email']."' ";
-        }        
-
-        $mysqli->query("UPDATE users SET ".$set."  WHERE `id`=1 ");   
+        // Check if user ID 1 exists
+        $res = $mysqli->query("SELECT id FROM users WHERE id=1");
+        
+        if($res \u0026\u0026 $res-\u003enum_rows \u003e 0) {
+            // Update existing user
+            $set = " `password`='".$password."', `mobile`='".$mobile."' ";
+            if(isset($data['admin_email'])){
+                $set .= ", `email`='".$data['admin_email']."' ";
+            }        
+            $mysqli->query("UPDATE users SET ".$set."  WHERE `id`=1 ");
+        } else {
+            // Create user ID 1
+            $mysqli->query("INSERT INTO users (id, password, mobile, email, active) VALUES (1, '".$password."', '".$mobile."', '".$admin_email."', 1)");
+            // Ensure they are in the admin group (Group ID 1)
+            $mysqli->query("INSERT INTO users_groups (user_id, group_id) VALUES (1, 1)");
+        }
+        
 		$mysqli->close();
 		return true;
 	}
