@@ -1,0 +1,66 @@
+Instructions for bulk update
+  * Data till column AA is for product rest for product variant(s)
+  * You can update more variants by repeating variants data in sequence for ex. in sample file first row have 1 variant and second product have no any variants
+  * You can keep fields blank if you don't want to change
+-------------------------------------------------------------------
+products data
+-------------------------------------------------------------------
+1. product id - ID of the product which you want to update. You can find from manage products section - mandatory
+
+2. category id - You can find from categories section
+
+3. product type - It must be simple_product or variable_product
+
+4. stock type -   If you don't want stock management leave it blank. else
+
+		Case 1 - if product type is simple_product it must be 0 (Stock will be managed product wise)
+
+		Case 2 - if product type is variable_product and you want to manage stock product wise stock type should be 1
+
+
+5. name - Name of the product
+
+6. short description - Short descriotion about product
+
+7. indicator - 0 -> none | 1 -> veg | 2 -> non-veg
+
+8. calories - 200
+
+9. cod allowed - 0 if COD not allowed  - 1 if COD allowed - (default will be 1)
+
+10. minimum order quantity - (default will be 1)
+
+11. total allowed quantity
+
+12. is cancelable - 0 if product is not cancelable  - 1 if product is cancelable - (default will be 0)
+
+13. cancelable till - It must be received, processed or shipped (case sensitive) if product is cancelable otherwise leave it blank
+
+14. image - You can copy relative path from media section - (for ex. uploads/media/2021/07.jpg)
+
+15. stock - set it if stock type is 0 or 1
+
+16. availability - set it if stock type is 0 -> 0 - not available 1 - available
+
+17. tag id - 10
+
+-------------------------------------------------------------------
+variants data
+-------------------------------------------------------------------
+18. variant id - ID of the product which you want to update. You can find from your database product variants table - mandatory
+
+19. price - Price of the product. it must be greater than special price
+
+20. special price - Discounted price of the product. it must be smaller than price - default will be 0 means no discounted price
+
+21. stock - set it if stock type is 2
+
+22. availability - set it if stock type is 2 -> 0 - not available 1 - available - optional
+
+
+
+
+
+
+
+
