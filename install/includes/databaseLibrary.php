@@ -16,9 +16,26 @@ class Database {
 		$mysqli = new mysqli($data['hostname'],$data['username'],$data['password'],$data['database']);
 		if(mysqli_connect_errno())
 			return false;
-		$query = file_get_contents('assets/sqlcommand.sql');
-		$mysqli->multi_query($query);
-		$mysqli->close();
+
+		$sql_file = 'assets/sqlcommand.sql';
+		if(!file_exists($sql_file)){
+			return false;
+		}
+		$query = file_get_contents($sql_file);
+		
+		if($mysqli-\u003emulti_query($query)) {
+            do {
+                if ($res = $mysqli-\u003estore_result()) {
+                    $res-\u003efree();
+                }
+            } while ($mysqli-\u003emore_results() \u0026\u0026 $mysqli-\u003enext_result());
+        }
+
+        if ($mysqli-\u003eerrno) {
+            return false;
+        }
+
+		$mysqli-\u003eclose();
 		return true;
 	}
 
