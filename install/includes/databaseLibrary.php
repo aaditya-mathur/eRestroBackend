@@ -23,19 +23,19 @@ class Database {
 		}
 		$query = file_get_contents($sql_file);
 		
-		if($mysqli-\u003emulti_query($query)) {
+		if($mysqli->multi_query($query)) {
             do {
-                if ($res = $mysqli-\u003estore_result()) {
-                    $res-\u003efree();
+                if ($res = $mysqli->store_result()) {
+                    $res->free();
                 }
-            } while ($mysqli-\u003emore_results() \u0026\u0026 $mysqli-\u003enext_result());
+            } while ($mysqli->more_results() && $mysqli->next_result());
         }
 
-        if ($mysqli-\u003eerrno) {
+        if ($mysqli->errno) {
             return false;
         }
 
-		$mysqli-\u003eclose();
+		$mysqli->close();
 		return true;
 	}
 
@@ -63,7 +63,7 @@ class Database {
         // Check if user ID 1 exists
         $res = $mysqli->query("SELECT id FROM users WHERE id=1");
         
-        if($res \u0026\u0026 $res-\u003enum_rows \u003e 0) {
+        if($res && $res->num_rows > 0) {
             // Update existing user
             $set = " `password`='".$password."', `mobile`='".$mobile."' ";
             if(isset($data['admin_email'])){
