@@ -1,0 +1,2 @@
+product id,category_id,type,stock type,name,short_description,indicator,calories,cod_allowed,minimum order quantity,total allowed quantity,is cancelable,cancelable till,image,stock,availability,partner_id,tag_id,variant id,price,special price,stock,availability,variant id,price,special price,stock,availability
+220,145,variable_product,0,NEW TEST 6,NEW TEST,,200,1,,,1,confirmed,,200,1,251,10,391,120,100,100,1,392,1000,800,100,1

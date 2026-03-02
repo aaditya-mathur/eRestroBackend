@@ -1,0 +1,2 @@
+category_id,type,stock type,name,short_description,indicator,calories,cod_allowed,minimum order quantity,total allowed quantity,is cancelable,cancelable till,image,stock,availability,tag id,attribute value ids,price,special price,stock,availability,attribute value ids,price,special price,stock,availability,attribute values id,price,special price,stock,availability
+121,variable_product,1,pizza gv,pizza gv,1,200,1,1,100,0,,uploads/media/2022/IMG-20220616-WA00182.jpeg,,,10,"40,53",200,100,100,1,"40,54",100,90,80,1,"44,56",300,200,20,1

@@ -1,0 +1,2 @@
+category_id,type,stock type,name,short_description,indicator,calories,cod_allowed,minimum order quantity,total allowed quantity,is cancelable,cancelable till,image,stock,availability,tag id,attribute value ids,price,special price
+98,simple_product,0,test partner,test partner,1,200,0,10,100,1,pending,uploads/media/2021/beverages1.png,100,1,10,,200,100

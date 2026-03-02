@@ -1,0 +1,68 @@
+Instructions for bulk upload
+  * Data till column AA is for product rest for product variant(s)
+  * You can add more variants by repeating variants data in sequence for ex. in sample file first product have 1 variants and second product have 2 variants
+  * Atleast one variant is mandatory and for type simple_product only one variant is allowed
+  * You can keep fields blank which are optional
+-------------------------------------------------------------------
+products data
+-------------------------------------------------------------------
+1. category id - You can find from categories section - mandatory
+
+2. product type - It must be simple_product or variable_product - mandatory
+
+3. stock type -   If you don't want stock management leave it blank. else
+
+		Case 1 - if product type is simple_product it must be 0 (Stock will be managed product wise)
+
+		Case 2 - if product type is variable_product and you want to manage stock product wise stock type should be 1
+
+
+4. name - Name of the product - mandatory
+
+5. short description - Short descriotion about product - optional
+
+6. indicator - 0 -> none | 1 -> veg | 2 -> non-veg - optional
+
+7. calories - calories of product
+
+8. cod allowed - 0 if COD not allowed  - 1 if COD allowed - optional (default will be 1)
+
+9. minimum order quantity - optional (default will be 1)
+
+10. total allowed quantity - optional (Leave it blank if no such restrictions)
+
+11. is cancelable - 0 if product is not cancelable  - 1 if product is cancelable - optional (default will be 0)
+
+12. cancelable till - It must be pending, confirmed,preparing or out_for_delivery (case sensitive) if product is cancelable otherwise leave it blank
+
+13. image - You can copy relative path from media section - mandatory (for ex. uploads/media/2021/07.jpg)
+
+14. stock - set it if stock type is 0 or 1 - optional
+
+15. availability - set it if stock type is 0 -> 0 - not available 1 - available - optional
+
+16. partner_id - Set Partner ID
+
+17. tag_id -  set Tag ID
+
+-------------------------------------------------------------------
+variants data
+-------------------------------------------------------------------
+
+18. attribute value ids - You can find from products >> attribute values section. it must be in format 3,4,5 - optional
+
+19. price - Price of the product. it must be greater than special price - mandatory
+
+20. special price - Discounted price of the product. it must be smaller than price - optional - default will be 0 means no discounted price
+
+21. stock - set it if stock type is 1 - optional
+
+22. availability - set it if stock type(depends on column 22.stock) is 1 -> 0 - not available 1 - available - optional
+
+
+
+
+
+
+
+
