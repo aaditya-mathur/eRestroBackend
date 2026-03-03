@@ -4691,12 +4691,10 @@ function fetch_partners($filter = [], $user_id = null, $limit = NULL, $offset = 
     // $bulkData['message'] = (empty($restro_search_res)) ? 'partner(s) does not exist' : 'partner retrieved successfully';
     // $bulkData['total'] = (empty($restro_search_res)) ? 0 : $total;
     // $rows = $tempRow = array();
-    $search_res = $t->db->select($where_near_by_for_select . ' u.username as owner_name, (SELECT MIN(CASE WHEN pv2.special_price > 0 THEN pv2.special_price WHEN pv2.price > 0 THEN pv2.price ELSE NULL END) FROM products p2 JOIN product_variants pv2 ON pv2.product_id = p2.id WHERE p2.partner_id = u.id) AS price_for_one, u.id AS partner_id, u.email, u.mobile, u.balance, pd.address AS partner_address, u.city AS city_id, c.name AS city_name, c.time_to_travel, u.fcm_id, u.latitude, u.longitude, pd.*', FALSE)
+    $search_res = $t->db->select('u.username as owner_name, u.id as partner_id, u.email, u.mobile, u.balance, pd.address as partner_address, u.city as city_id, u.fcm_id, u.latitude, u.longitude, pd.*, c.name as city_name, c.time_to_travel', FALSE)
         ->join('users_groups ug', 'ug.user_id = u.id', 'left')
         ->join('partner_data pd', 'pd.user_id = u.id', 'left')
-        ->join('products p', 'p.partner_id = u.id', 'left')
-        ->join('cities c', 'c.id = u.city', 'left')
-        ->join('partner_timings rt', 'rt.partner_id = pd.user_id', 'left');
+        ->join('cities c', 'c.id = u.city', 'left');
 
     if (isset($multipleWhere) && !empty($multipleWhere)) {
         $search_res->group_start();
@@ -4714,18 +4712,6 @@ function fetch_partners($filter = [], $user_id = null, $limit = NULL, $offset = 
             $where_near_by .= " OR (ST_Distance_Sphere(POINT(u.latitude, u.longitude), ST_GeomFromText('POINT(" . $filter['latitude'] . " " . $filter['longitude'] . ")')) / 1000 <= " . $value['max_deliverable_distance'] . " AND u.city = " . $value['id'] . ") ";
         }
         $search_res->where("(" . $where_near_by . ") )", NULL, FALSE);
-    }
-
-    if (isset($where) && !empty($where)) {
-        $search_res->where($where);
-    }
-
-    if (isset($filter) && !empty($filter['id']) && $filter['id'] != null) {
-        if (is_array($filter['id']) && !empty($filter['id'])) {
-            $search_res->where_in('u.id', $filter['id']);
-        } else {
-            $search_res->where('u.id', $filter['id']);
-        }
     }
 
     if (!empty($where)) {
@@ -4763,24 +4749,11 @@ function fetch_partners($filter = [], $user_id = null, $limit = NULL, $offset = 
         }
 
         $tempRow['partner_id'] = $row['partner_id'];
-
-        // get order rating
-        $t->load->model("Rating_model");
-        // set fevorite count if restro have
-
-        if (isset($user_id) && $user_id != null) {
-            $fav = $t->db->where(['type_id' => $row['partner_id'], 'type' => 'partners', 'user_id' => $user_id])->get('favorites')->num_rows();
-            $tempRow['is_favorite'] = strval($fav);
-        } else {
-            $tempRow['is_favorite'] = '0';
+        $tempRow['price_for_one'] = "0";
+        $price_res = $t->db->select('MIN(IF(special_price > 0, special_price, price)) as price_for_one')->where('partner_id', $row['partner_id'])->join('product_variants pv', 'pv.product_id = p.id')->get('products p')->result_array();
+        if(!empty($price_res) && isset($price_res[0]['price_for_one'])){
+            $tempRow['price_for_one'] = strval($price_res[0]['price_for_one']);
         }
-        $tempRow['is_restro_open'] = (is_restro_open($row['partner_id']) == true) ? "1" : "0";
-
-        // calculate delivery time and distance for restro
-        if (isset($filter) && !empty($filter['latitude']) && !empty($filter['longitude'])) {
-            $tempRow['partner_cook_time'] = strval(calculate_delivery_time(round($row['distance']), $row['time_to_travel'], $row['cooking_time']));
-            // $tempRow['distance'] = round($row['distance']) . " km";
-            $distance = calculate_distance($filter['latitude'], $filter['longitude'], $row['latitude'], $row['longitude']);
             $tempRow['distance'] = round($distance) . " km";
         } else {
             $tempRow['partner_cook_time'] = (isset($row['cooking_time']) && !empty($row['cooking_time'])) ? $row['cooking_time'] . " min" : "0";
