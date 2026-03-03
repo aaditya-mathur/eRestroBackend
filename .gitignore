@@ -1,6 +1,3 @@
-# Track the directories but ignore their contents
-
-
 # Other ignores
 assets/front_end/modern/demo/*
 assets/front_end/modern/images/*
