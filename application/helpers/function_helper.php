@@ -450,7 +450,7 @@ function fetch_product($user_id = NULL, $filter = NULL, $id = NULL, $category_id
     // 3. discount filter done
     $discount_filter_data = (isset($filter['discount']) && !empty($filter['discount'])) ? ' ( if(pv.special_price > 0,( (pv.price-pv.special_price)/pv.price)*100,0)) as cal_discount_percentage, ' : '';
 
-    $t->db->select($discount_filter_data . ' (select count(id)  from products where products.category_id=c.id ) as total,count(p.id) as sales, p.stock_type,p.calories,p.status ,p.is_prices_inclusive_tax,p.tax as tax_id, p.type ,GROUP_CONCAT(DISTINCT(pa.attribute_value_ids)) as attr_value_ids, p.partner_id,p.id,p.stock,p.name,p.category_id,p.short_description,p.slug,p.total_allowed_quantity,p.minimum_order_quantity,p.cod_allowed,p.is_spicy,p.row_order,p.rating,p.no_of_ratings,p.image,p.is_cancelable,p.cancelable_till,p.indicator, p.highlights,p.availability,c.name as category_name,c.slug as category_slug,p.available_time,p.start_time,p.end_time,tax.percentage as tax_percentage')
+    $t->db->select($discount_filter_data . ' (select count(id)  from products where products.category_id=c.id ) as total,count(p.id) as sales, p.stock_type,p.calories,p.status ,p.is_prices_inclusive_tax,p.tax as tax_id, p.type ,GROUP_CONCAT(DISTINCT(pa.attribute_value_ids)) as attr_value_ids, p.partner_id,p.id,p.stock,p.name,p.category_id,p.short_description,p.slug,p.total_allowed_quantity,p.minimum_order_quantity,p.cod_allowed,p.is_spicy,p.row_order,p.rating,p.no_of_ratings,p.image,p.is_cancelable,p.cancelable_till,p.indicator, p.highlights,p.availability,c.name as category_name,c.slug as category_slug,p.available_time,p.start_time,p.end_time,tax.percentage as tax_percentage', FALSE)
         ->join(" categories c", "p.category_id=c.id ", 'LEFT')
         ->join(" partner_data pd", "p.partner_id=pd.user_id ")
         ->join(" users u", "p.partner_id=u.id")
@@ -579,7 +579,7 @@ function fetch_product($user_id = NULL, $filter = NULL, $id = NULL, $category_id
         foreach ($city_data as $value) {
             $where_near_by .= " OR (ST_Distance_Sphere(POINT(u.latitude,u.longitude), ST_GeomFromText('POINT(" . $filter['latitude'] . " " . $filter['longitude'] . ")') )/ 1000 <= " . $value['max_deliverable_distance'] . " AND u.city = " . $value['id'] . ")";
         }
-        $t->db->where($where_near_by . ")");
+        $t->db->where($where_near_by . ")", NULL, FALSE);
     }
     // 11. attribute id wise filter  done
     if (isset($filter) && !empty($filter['attribute_value_ids'])) {
@@ -717,7 +717,7 @@ function fetch_product($user_id = NULL, $filter = NULL, $id = NULL, $category_id
     }
 
     $discount_filter = (isset($filter['discount']) && !empty($filter['discount'])) ? ' , GROUP_CONCAT( IF( ( IF( pv.special_price > 0, ((pv.price - pv.special_price) / pv.price) * 100, 0 ) ) > ' . $filter['discount'] . ', ( IF( pv.special_price > 0, ((pv.price - pv.special_price) / pv.price) * 100, 0 ) ), 0 ) ) AS cal_discount_percentage ' : '';
-    $product_count = $t->db->select('count(DISTINCT(' . $sort_by . ')) as total , GROUP_CONCAT(pa.attribute_value_ids) as attr_value_ids' . $discount_filter)
+    $product_count = $t->db->select('count(DISTINCT(' . $sort_by . ')) as total , GROUP_CONCAT(pa.attribute_value_ids) as attr_value_ids' . $discount_filter, FALSE)
         ->join(" categories c", "p.category_id=c.id ", 'LEFT')
         ->join(" partner_data pd", "p.partner_id=pd.user_id ")
         ->join('`product_variants` pv', 'p.id = pv.product_id', 'LEFT')
@@ -797,7 +797,7 @@ function fetch_product($user_id = NULL, $filter = NULL, $id = NULL, $category_id
         foreach ($city_data as $value) {
             $where_near_by .= " OR (ST_Distance_Sphere(POINT(u.latitude,u.longitude), ST_GeomFromText('POINT(" . $filter['latitude'] . " " . $filter['longitude'] . ")') )/ 1000 <= " . $value['max_deliverable_distance'] . " AND u.city = " . $value['id'] . ")";
         }
-        $t->db->where($where_near_by . ")");
+        $t->db->where($where_near_by . ")", NULL, FALSE);
     }
 
     if (isset($filter) && !empty($filter['attribute_value_ids'])) {
@@ -4561,7 +4561,7 @@ function fetch_partners($filter = [], $user_id = null, $limit = NULL, $offset = 
     if (isset($filter) && !empty($filter['latitude']) && !empty($filter['longitude'])) {
         $city_data = get_cities($filter['city_id'], "id,name,max_deliverable_distance");
     }
-    $where = ['u.active' => 1, 'pd.status' => 1, ' p.status' => 1, 'ug.group_id' => '4'];
+    $where = ['u.active' => 1, 'pd.status' => 1, 'p.status' => 1, 'ug.group_id' => '4'];
 
     if (isset($filter) && !empty($filter['slug']) && $filter['slug'] != "") {
         $where['pd.slug'] = $filter['slug'];
@@ -4588,7 +4588,7 @@ function fetch_partners($filter = [], $user_id = null, $limit = NULL, $offset = 
         $multipleWhere = ['u.`id`' => $search, 'u.`username`' => $search, 'u.`email`' => $search, 'u.`mobile`' => $search, 'u.`address`' => $search, 'pd.`address`' => $search, 'u.`balance`' => $search, 'pd.`partner_name`' => $search, 'pd.`description`' => $search];
     }
 
-    $count_res = $t->db->select(' COUNT(DISTINCT u.id) as `total` ')
+    $count_res = $t->db->select(' COUNT(DISTINCT u.id) as `total` ', FALSE)
         ->join('users_groups ug', ' ug.user_id = u.id ')
         ->join('partner_data pd', ' pd.user_id = u.id ')
         ->join('products p', ' p.partner_id = u.id ', "left")
@@ -4601,7 +4601,7 @@ function fetch_partners($filter = [], $user_id = null, $limit = NULL, $offset = 
         $count_res->group_end();
     }
     if (isset($filter) && !empty($filter['only_opened_partners']) && $filter['only_opened_partners'] != "") {
-        $count_res->where("day = DAYNAME(CURDATE())  and opening_time < CURTIME() and is_open=1");
+        $count_res->where("day = DAYNAME(CURDATE()) AND opening_time < CURTIME() AND is_open = 1", NULL, FALSE);
     }
     if (isset($filter) && !empty($filter['id']) && $filter['id'] != null) {
         if (is_array($filter['id']) && !empty($filter['id'])) {
@@ -4617,17 +4617,15 @@ function fetch_partners($filter = [], $user_id = null, $limit = NULL, $offset = 
     if (isset($where) && !empty($where)) {
         $count_res->where($where);
     }
-    $where_near_by = "";
-    // comment
+    // count query
     if (isset($filter) && !empty($filter['city_id']) && $filter['city_id'] != "" && $filter['city_id'] != "null" && !empty($filter['latitude']) && $filter['latitude'] != "null" &&  $filter['longitude'] != "null" && !empty($filter['longitude'])) {
-
         $where_near_by = "((ST_Distance_Sphere(POINT(u.latitude,u.longitude), ST_GeomFromText('POINT(" . $filter['latitude'] . " " . $filter['longitude'] . ")') )/ 1000 <= " . $final_distance . " AND u.city = " . $filter['city_id'] . ")";
         foreach ($city_data as $value) {
             $where_near_by .= " OR (ST_Distance_Sphere(POINT(u.latitude,u.longitude), ST_GeomFromText('POINT(" . $filter['latitude'] . " " . $filter['longitude'] . ")') )/ 1000 <= " . $value['max_deliverable_distance'] . " AND u.city = " . $value['id'] . ")";
         }
-        $count_res->where($where_near_by . ")");
+        $count_res->where("(" . $where_near_by . "))", NULL, FALSE);
     }
-    // end
+    // end count query logic
     $where_near_by_for_select = "";
 
     $offer_count = $count_res->get('users u')->result_array();
@@ -4693,33 +4691,7 @@ function fetch_partners($filter = [], $user_id = null, $limit = NULL, $offset = 
     // $bulkData['message'] = (empty($restro_search_res)) ? 'partner(s) does not exist' : 'partner retrieved successfully';
     // $bulkData['total'] = (empty($restro_search_res)) ? 0 : $total;
     // $rows = $tempRow = array();
-    $search_res = $t->db->select($where_near_by_for_select . '
-    `u`.username as owner_name,
-    (
-        SELECT MIN(
-            CASE 
-                WHEN pv.special_price > 0 THEN pv.special_price
-                WHEN pv.price > 0 THEN pv.price
-                ELSE NULL
-            END
-        )
-        FROM `products` p 
-        JOIN `product_variants` pv ON pv.product_id = p.id 
-        WHERE p.partner_id = u.id
-    ) AS price_for_one, 
-    u.id AS partner_id, 
-    u.email, 
-    u.mobile, 
-    u.balance, 
-    pd.address AS partner_address, 
-    u.city AS city_id, 
-    c.name AS city_name, 
-    c.time_to_travel, 
-    u.fcm_id, 
-    u.latitude, 
-    u.longitude, 
-    `pd`.*
-')
+    $search_res = $t->db->select($where_near_by_for_select . ' `u`.username as owner_name, (SELECT MIN(CASE WHEN pv2.special_price > 0 THEN pv2.special_price WHEN pv2.price > 0 THEN pv2.price ELSE NULL END) FROM `products` p2 JOIN `product_variants` pv2 ON pv2.product_id = p2.id WHERE p2.partner_id = u.id) AS price_for_one, u.id AS partner_id, u.email, u.mobile, u.balance, pd.address AS partner_address, u.city AS city_id, c.name AS city_name, c.time_to_travel, u.fcm_id, u.latitude, u.longitude, `pd`.*', FALSE)
         ->join('users_groups ug', 'ug.user_id = u.id')
         ->join('partner_data pd', 'pd.user_id = u.id')
         ->join('products p', 'p.partner_id = u.id', 'left')
@@ -4733,26 +4705,15 @@ function fetch_partners($filter = [], $user_id = null, $limit = NULL, $offset = 
     }
 
     if (isset($filter) && !empty($filter['only_opened_partners']) && $filter['only_opened_partners'] != "") {
-        $search_res->where("day = DAYNAME(CURDATE()) AND opening_time < CURTIME() AND is_open = 1");
+        $search_res->where("day = DAYNAME(CURDATE()) AND opening_time < CURTIME() AND is_open = 1", NULL, FALSE);
     }
 
-    $where_near_by = "";
-    if (
-        isset($filter) &&
-        !empty($filter['city_id']) && $filter['city_id'] != "" && $filter['city_id'] != "null" &&
-        !empty($filter['latitude']) && $filter['latitude'] != "null" &&
-        !empty($filter['longitude']) && $filter['longitude'] != "null"
-    ) {
-        $where_near_by = "((ST_Distance_Sphere(POINT(u.latitude, u.longitude), ST_GeomFromText('POINT(" .
-            $filter['latitude'] . " " . $filter['longitude'] . ")')) / 1000 <= " . $final_distance .
-            " AND u.city = " . $filter['city_id'] . ")";
-
+    if (isset($filter) && !empty($filter['city_id']) && $filter['city_id'] != "" && $filter['city_id'] != "null" && !empty($filter['latitude']) && $filter['latitude'] != "null" &&  $filter['longitude'] != "null" && !empty($filter['longitude'])) {
+        $where_near_by = "((ST_Distance_Sphere(POINT(u.latitude,u.longitude), ST_GeomFromText('POINT(" . $filter['latitude'] . " " . $filter['longitude'] . ")') )/ 1000 <= " . $final_distance . " AND u.city = " . $filter['city_id'] . ")";
         foreach ($city_data as $value) {
-            $where_near_by .= " OR (ST_Distance_Sphere(POINT(u.latitude, u.longitude), ST_GeomFromText('POINT(" .
-                $filter['latitude'] . " " . $filter['longitude'] . ")')) / 1000 <= " .
-                $value['max_deliverable_distance'] . " AND u.city = " . $value['id'] . ")";
+            $where_near_by .= " OR (ST_Distance_Sphere(POINT(u.latitude,u.longitude), ST_GeomFromText('POINT(" . $filter['latitude'] . " " . $filter['longitude'] . ")') )/ 1000 <= " . $value['max_deliverable_distance'] . " AND u.city = " . $value['id'] . ")";
         }
-        $count_res->where($where_near_by . ")");
+        $search_res->where("(" . $where_near_by . "))", NULL, FALSE);
     }
 
     if (isset($where) && !empty($where)) {
