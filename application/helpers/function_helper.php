@@ -4692,11 +4692,11 @@ function fetch_partners($filter = [], $user_id = null, $limit = NULL, $offset = 
     // $bulkData['total'] = (empty($restro_search_res)) ? 0 : $total;
     // $rows = $tempRow = array();
     $search_res = $t->db->select($where_near_by_for_select . ' `u`.username as owner_name, (SELECT MIN(CASE WHEN pv2.special_price > 0 THEN pv2.special_price WHEN pv2.price > 0 THEN pv2.price ELSE NULL END) FROM `products` p2 JOIN `product_variants` pv2 ON pv2.product_id = p2.id WHERE p2.partner_id = u.id) AS price_for_one, u.id AS partner_id, u.email, u.mobile, u.balance, pd.address AS partner_address, u.city AS city_id, c.name AS city_name, c.time_to_travel, u.fcm_id, u.latitude, u.longitude, `pd`.*', FALSE)
-        ->join('users_groups ug', 'ug.user_id = u.id')
-        ->join('partner_data pd', 'pd.user_id = u.id')
+        ->join('users_groups ug', 'ug.user_id = u.id', 'left')
+        ->join('partner_data pd', 'pd.user_id = u.id', 'left')
         ->join('products p', 'p.partner_id = u.id', 'left')
         ->join('cities c', 'c.id = u.city', 'left')
-        ->join('partner_timings rt', 'rt.partner_id = pd.user_id');
+        ->join('partner_timings rt', 'rt.partner_id = pd.user_id', 'left');
 
     if (isset($multipleWhere) && !empty($multipleWhere)) {
         $search_res->group_start();
