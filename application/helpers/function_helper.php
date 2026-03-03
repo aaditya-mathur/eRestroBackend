@@ -4561,14 +4561,16 @@ function fetch_partners($filter = [], $user_id = null, $limit = NULL, $offset = 
     if (isset($filter) && !empty($filter['latitude']) && !empty($filter['longitude'])) {
         $city_data = get_cities($filter['city_id'], "id,name,max_deliverable_distance");
     }
-    $where = ['u.active' => 1, 'pd.status' => 1, 'p.status' => 1, 'ug.group_id' => '4'];
+    $where = ['u.active' => 1, 'ug.group_id' => 4];
 
     if (isset($filter) && !empty($filter['slug']) && $filter['slug'] != "") {
         $where['pd.slug'] = $filter['slug'];
     }
 
     if (isset($filter) && isset($filter['ignore_status']) && $filter['ignore_status'] == TRUE) {
-        $where = ['u.active' => 1, 'ug.group_id' => '4'];
+        $where = ['u.active' => 1, 'ug.group_id' => 4];
+    } else {
+        $where['pd.status'] = 1;
     }
 
     if (isset($filter) && !empty($filter['type']) && $filter['type'] != "") {
@@ -4588,12 +4590,13 @@ function fetch_partners($filter = [], $user_id = null, $limit = NULL, $offset = 
         $multipleWhere = ['u.`id`' => $search, 'u.`username`' => $search, 'u.`email`' => $search, 'u.`mobile`' => $search, 'u.`address`' => $search, 'pd.`address`' => $search, 'u.`balance`' => $search, 'pd.`partner_name`' => $search, 'pd.`description`' => $search];
     }
 
-    $count_res = $t->db->select(' COUNT(DISTINCT u.id) as `total` ', FALSE)
-        ->join('users_groups ug', ' ug.user_id = u.id ')
-        ->join('partner_data pd', ' pd.user_id = u.id ')
-        ->join('products p', ' p.partner_id = u.id ', "left")
-        ->join('cities c', 'c.id = u.city', "left")
-        ->join('partner_timings rt', 'rt.partner_id = pd.user_id');
+    $count_res = $t->db->select(' COUNT(DISTINCT(u.id)) as total ', FALSE)
+        ->from('users u')
+        ->join('users_groups ug', 'ug.user_id = u.id', 'left')
+        ->join('partner_data pd', 'pd.user_id = u.id', 'left')
+        ->join('products p', 'p.partner_id = u.id', 'left')
+        ->join('cities c', 'c.id = u.city', 'left')
+        ->join('partner_timings rt', 'rt.partner_id = pd.user_id', 'left');
 
     if (isset($multipleWhere) && !empty($multipleWhere)) {
         $count_res->group_start();
@@ -4605,30 +4608,27 @@ function fetch_partners($filter = [], $user_id = null, $limit = NULL, $offset = 
     }
     if (isset($filter) && !empty($filter['id']) && $filter['id'] != null) {
         if (is_array($filter['id']) && !empty($filter['id'])) {
-            $count_res->where_in('pd.user_id', $filter['id']);
-            $count_res->where($where);
+            $count_res->where_in('u.id', $filter['id']);
         } else {
-            $where['pd.user_id'] = $filter['id'];
-            $count_res->where($where);
+            $count_res->where('u.id', $filter['id']);
         }
-    } else {
-        $count_res->where($where);
     }
-    if (isset($where) && !empty($where)) {
+
+    if (!empty($where)) {
         $count_res->where($where);
     }
     // count query
     if (isset($filter) && !empty($filter['city_id']) && $filter['city_id'] != "" && $filter['city_id'] != "null" && !empty($filter['latitude']) && $filter['latitude'] != "null" &&  $filter['longitude'] != "null" && !empty($filter['longitude'])) {
-        $where_near_by = "((ST_Distance_Sphere(POINT(u.latitude,u.longitude), ST_GeomFromText('POINT(" . $filter['latitude'] . " " . $filter['longitude'] . ")') )/ 1000 <= " . $final_distance . " AND u.city = " . $filter['city_id'] . ")";
+        $where_near_by = " ( (ST_Distance_Sphere(POINT(u.latitude,u.longitude), ST_GeomFromText('POINT(" . $filter['latitude'] . " " . $filter['longitude'] . ")') )/ 1000 <= " . $final_distance . " AND u.city = " . $filter['city_id'] . ") ";
         foreach ($city_data as $value) {
-            $where_near_by .= " OR (ST_Distance_Sphere(POINT(u.latitude,u.longitude), ST_GeomFromText('POINT(" . $filter['latitude'] . " " . $filter['longitude'] . ")') )/ 1000 <= " . $value['max_deliverable_distance'] . " AND u.city = " . $value['id'] . ")";
+            $where_near_by .= " OR (ST_Distance_Sphere(POINT(u.latitude,u.longitude), ST_GeomFromText('POINT(" . $filter['latitude'] . " " . $filter['longitude'] . ")') )/ 1000 <= " . $value['max_deliverable_distance'] . " AND u.city = " . $value['id'] . ") ";
         }
-        $count_res->where("(" . $where_near_by . "))", NULL, FALSE);
+        $count_res->where("(" . $where_near_by . ") )", NULL, FALSE);
     }
     // end count query logic
     $where_near_by_for_select = "";
     $total = 0;
-    $offer_count = $count_res->get('users u')->result_array();
+    $offer_count = $count_res->get()->result_array();
     if (!empty($offer_count)) {
         $total = $offer_count[0]['total'];
     }
@@ -4709,11 +4709,11 @@ function fetch_partners($filter = [], $user_id = null, $limit = NULL, $offset = 
     }
 
     if (isset($filter) && !empty($filter['city_id']) && $filter['city_id'] != "" && $filter['city_id'] != "null" && !empty($filter['latitude']) && $filter['latitude'] != "null" &&  $filter['longitude'] != "null" && !empty($filter['longitude'])) {
-        $where_near_by = "((ST_Distance_Sphere(POINT(u.latitude,u.longitude), ST_GeomFromText('POINT(" . $filter['latitude'] . " " . $filter['longitude'] . ")') )/ 1000 <= " . $final_distance . " AND u.city = " . $filter['city_id'] . ")";
+        $where_near_by = " ( (ST_Distance_Sphere(POINT(u.latitude, u.longitude), ST_GeomFromText('POINT(" . $filter['latitude'] . " " . $filter['longitude'] . ")')) / 1000 <= " . $final_distance . " AND u.city = " . $filter['city_id'] . ") ";
         foreach ($city_data as $value) {
-            $where_near_by .= " OR (ST_Distance_Sphere(POINT(u.latitude,u.longitude), ST_GeomFromText('POINT(" . $filter['latitude'] . " " . $filter['longitude'] . ")') )/ 1000 <= " . $value['max_deliverable_distance'] . " AND u.city = " . $value['id'] . ")";
+            $where_near_by .= " OR (ST_Distance_Sphere(POINT(u.latitude, u.longitude), ST_GeomFromText('POINT(" . $filter['latitude'] . " " . $filter['longitude'] . ")')) / 1000 <= " . $value['max_deliverable_distance'] . " AND u.city = " . $value['id'] . ") ";
         }
-        $search_res->where("(" . $where_near_by . "))", NULL, FALSE);
+        $search_res->where("(" . $where_near_by . ") )", NULL, FALSE);
     }
 
     if (isset($where) && !empty($where)) {
@@ -4722,19 +4722,22 @@ function fetch_partners($filter = [], $user_id = null, $limit = NULL, $offset = 
 
     if (isset($filter) && !empty($filter['id']) && $filter['id'] != null) {
         if (is_array($filter['id']) && !empty($filter['id'])) {
-            $search_res->where_in('pd.user_id', $filter['id']);
-            $search_res->where($where);
+            $search_res->where_in('u.id', $filter['id']);
         } else {
-            $where['pd.user_id'] = $filter['id'];
-            $search_res->where($where);
+            $search_res->where('u.id', $filter['id']);
         }
     }
 
+    if (!empty($where)) {
+        $search_res->where($where);
+    }
+
     $restro_search_res = $search_res
+        ->from('users u')
         ->group_by('u.id')
         ->order_by($sort, $order)
         ->limit($limit, $offset)
-        ->get('users u')
+        ->get()
         ->result_array();
 
     $bulkData = array();
